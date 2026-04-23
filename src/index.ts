@@ -36,3 +36,5 @@ export * from './resources/chat-templates';
 export * from './resources/chat-templates/types';
 export * from './resources/webhooks';
 export * from './resources/webhooks/types';
+export * from './resources/files';
+export * from './resources/files/types';

@@ -19,6 +19,7 @@ import { SalesbotsResource } from './resources/salesbots';
 import { SourcesResource, WebsiteButtonsResource } from './resources/sources';
 import { ChatTemplatesResource } from './resources/chat-templates';
 import { WebhooksResource } from './resources/webhooks';
+import { FilesResource } from './resources/files';
 import { KommoApiError } from './errors';
 
 export class KommoClient {
@@ -46,6 +47,7 @@ export class KommoClient {
   public websiteButtons: WebsiteButtonsResource;
   public chatTemplates: ChatTemplatesResource;
   public webhooks: WebhooksResource;
+  public files: FilesResource;
 
   constructor(config: KommoConfig) {
     this.config = config;
@@ -111,6 +113,7 @@ export class KommoClient {
     this.websiteButtons = new WebsiteButtonsResource(this.httpClient);
     this.chatTemplates = new ChatTemplatesResource(this.httpClient);
     this.webhooks = new WebhooksResource(this.httpClient);
+    this.files = new FilesResource(this.httpClient);
   }
 
   public setAccessToken(token: string) {
