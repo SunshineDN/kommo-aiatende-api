@@ -38,3 +38,5 @@ export * from './resources/webhooks';
 export * from './resources/webhooks/types';
 export * from './resources/files';
 export * from './resources/files/types';
+export * from './resources/account';
+export * from './resources/account/types';

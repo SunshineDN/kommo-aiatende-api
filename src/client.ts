@@ -20,6 +20,7 @@ import { SourcesResource, WebsiteButtonsResource } from './resources/sources';
 import { ChatTemplatesResource } from './resources/chat-templates';
 import { WebhooksResource } from './resources/webhooks';
 import { FilesResource } from './resources/files';
+import { AccountResource } from './resources/account';
 import { KommoApiError } from './errors';
 
 export class KommoClient {
@@ -48,6 +49,7 @@ export class KommoClient {
   public chatTemplates: ChatTemplatesResource;
   public webhooks: WebhooksResource;
   public files: FilesResource;
+  public account: AccountResource;
 
   constructor(config: KommoConfig) {
     this.config = config;
@@ -114,6 +116,7 @@ export class KommoClient {
     this.chatTemplates = new ChatTemplatesResource(this.httpClient);
     this.webhooks = new WebhooksResource(this.httpClient);
     this.files = new FilesResource(this.httpClient);
+    this.account = new AccountResource(this.httpClient);
   }
 
   public setAccessToken(token: string) {
