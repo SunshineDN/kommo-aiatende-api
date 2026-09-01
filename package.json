@@ -1,6 +1,6 @@
 {
   "name": "kommo-aiatende-api",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "SDK não oficial em TypeScript para integração com a API da Kommo CRM.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

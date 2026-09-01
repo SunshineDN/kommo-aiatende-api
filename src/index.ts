@@ -40,3 +40,5 @@ export * from './resources/files';
 export * from './resources/files/types';
 export * from './resources/account';
 export * from './resources/account/types';
+export * from './resources/talks';
+export * from './resources/talks/types';

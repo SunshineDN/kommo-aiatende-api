@@ -8,6 +8,8 @@ import {
   DeleteWebhookInput
 } from './types';
 
+// Kommo's webhooks API only exposes GET/POST/DELETE (no PATCH), so there is
+// no update() here by design — changing a webhook's events means delete + create.
 export class WebhooksResource extends BaseResource {
   async list(params?: ListWebhooksParams): Promise<ListWebhooksResponse> {
     const queryParams: any = {};
