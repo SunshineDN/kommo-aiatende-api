@@ -104,8 +104,7 @@ export class LeadsResource extends BaseResource {
 
   async create(items: CreateLeadInput | CreateLeadInput[]): Promise<CreateLeadsResponse> {
     const payload = Array.isArray(items) ? items : [items];
-    const response = await this.client.post<CreateLeadsResponse>('/api/v4/leads', payload);
-    return response.data;
+    return this.postIdempotent<CreateLeadsResponse, CreateLeadInput>('/api/v4/leads', payload);
   }
 
   async update(items: UpdateLeadInput | UpdateLeadInput[]): Promise<UpdateLeadsResponse> {
@@ -121,8 +120,7 @@ export class LeadsResource extends BaseResource {
 
   async createComplex(items: CreateComplexLeadInput | CreateComplexLeadInput[]): Promise<CreateComplexLeadsResponse> {
     const payload = Array.isArray(items) ? items : [items];
-    const response = await this.client.post<CreateComplexLeadsResponse>('/api/v4/leads/complex', payload);
-    return response.data;
+    return this.postIdempotent<CreateComplexLeadsResponse, CreateComplexLeadInput>('/api/v4/leads/complex', payload);
   }
 
   async listLossReasons(): Promise<ListLossReasonsResponse> {

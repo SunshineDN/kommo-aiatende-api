@@ -1,3 +1,12 @@
+export interface RetryConfig {
+  /** Número máximo de novas tentativas após a primeira falha. Padrão: 2. */
+  retries?: number;
+  /** Atraso base (ms) usado no backoff exponencial. Padrão: 300. */
+  baseDelayMs?: number;
+  /** Teto do atraso entre tentativas (ms). Padrão: 3000. */
+  maxDelayMs?: number;
+}
+
 export interface KommoConfig {
   domain: string;
   accessToken?: string;
@@ -5,6 +14,10 @@ export interface KommoConfig {
   clientId?: string;
   clientSecret?: string;
   redirectUri?: string;
+  /** Timeout (ms) por requisição HTTP. Padrão: 30000. */
+  timeout?: number;
+  /** Configuração de retry para erros transitórios de rede (ex.: "socket hang up"). Passe `false` para desativar. */
+  retry?: RetryConfig | false;
 }
 
 export interface AccessTokenResponse {

@@ -23,6 +23,7 @@ import { FilesResource } from './resources/files';
 import { AccountResource } from './resources/account';
 import { TalksResource } from './resources/talks';
 import { KommoApiError } from './errors';
+import { attachRetryInterceptor } from './http/retry';
 
 export class KommoClient {
   public config: KommoConfig;
@@ -67,6 +68,7 @@ export class KommoClient {
 
     this.httpClient = axios.create({
       baseURL,
+      timeout: config.timeout ?? 30000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -74,6 +76,10 @@ export class KommoClient {
         return qs.stringify(params, { arrayFormat: 'brackets' });
       }
     });
+
+    if (config.retry !== false) {
+      attachRetryInterceptor(this.httpClient, config.retry || {});
+    }
 
     this.httpClient.interceptors.response.use(
       (response) => response,

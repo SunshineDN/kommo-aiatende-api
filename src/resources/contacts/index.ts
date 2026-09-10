@@ -96,8 +96,7 @@ export class ContactsResource extends BaseResource {
 
   async create(items: CreateContactInput | CreateContactInput[]): Promise<CreateContactsResponse> {
     const payload = Array.isArray(items) ? items : [items];
-    const response = await this.client.post<CreateContactsResponse>('/api/v4/contacts', payload);
-    return response.data;
+    return this.postIdempotent<CreateContactsResponse, CreateContactInput>('/api/v4/contacts', payload);
   }
 
   async update(items: UpdateContactInput | UpdateContactInput[]): Promise<UpdateContactsResponse> {

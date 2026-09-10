@@ -96,8 +96,7 @@ export class CompaniesResource extends BaseResource {
 
   async create(items: CreateCompanyInput | CreateCompanyInput[]): Promise<CreateCompaniesResponse> {
     const payload = Array.isArray(items) ? items : [items];
-    const response = await this.client.post<CreateCompaniesResponse>('/api/v4/companies', payload);
-    return response.data;
+    return this.postIdempotent<CreateCompaniesResponse, CreateCompanyInput>('/api/v4/companies', payload);
   }
 
   async update(items: UpdateCompanyInput | UpdateCompanyInput[]): Promise<UpdateCompaniesResponse> {
