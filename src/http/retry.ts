@@ -34,21 +34,49 @@ function isRetryableRequest(config: RetryableAxiosRequestConfig): boolean {
   return method === 'post' && config._idempotentRetry === true;
 }
 
+// 429 significa que a Kommo rejeitou a requisição por limite de taxa (~7 req/s por conta) SEM
+// processá-la — diferente de erro de rede/socket, aqui não há risco de duplicar efeito colateral,
+// então é seguro repetir em qualquer método, mesmo POST não marcado como idempotente.
+function isRateLimited(error: AxiosError): boolean {
+  return error.response?.status === 429;
+}
+
+// A Kommo manda Retry-After em segundos (às vezes como data HTTP) quando limita a taxa — usar
+// isso é mais preciso que o backoff exponencial genérico, que não sabe quando a janela reabre.
+function retryAfterMs(error: AxiosError): number | null {
+  const header = error.response?.headers?.['retry-after'];
+  if (!header) return null;
+
+  const seconds = Number(header);
+  if (!Number.isNaN(seconds)) return seconds * 1000;
+
+  const dateMs = Date.parse(header);
+  if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - Date.now());
+
+  return null;
+}
+
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * Instala retry com backoff exponencial para erros transitórios de rede
- * (ex.: "socket hang up"/ECONNRESET), restrito a requisições idempotentes.
+ * Instala retry com backoff exponencial para erros transitórios de rede (ex.: "socket
+ * hang up"/ECONNRESET), restrito a requisições idempotentes, e para respostas 429 (rate limit da
+ * Kommo), sempre — honrando o header Retry-After quando presente.
  */
 export function attachRetryInterceptor(client: AxiosInstance, retryConfig: RetryConfig = {}): void {
   const { retries = 2, baseDelayMs = 300, maxDelayMs = 3000 } = retryConfig;
 
   client.interceptors.response.use(undefined, async (error: AxiosError) => {
     const config = error.config as RetryableAxiosRequestConfig | undefined;
+    const rateLimited = isRateLimited(error);
 
-    if (!config || retries <= 0 || !isTransientNetworkError(error) || !isRetryableRequest(config)) {
+    if (
+      !config ||
+      retries <= 0 ||
+      (!rateLimited && (!isTransientNetworkError(error) || !isRetryableRequest(config)))
+    ) {
       throw error;
     }
 
@@ -59,7 +87,8 @@ export function attachRetryInterceptor(client: AxiosInstance, retryConfig: Retry
 
     config._retryCount = attempt + 1;
 
-    const backoff = Math.min(maxDelayMs, baseDelayMs * 2 ** attempt);
+    const exponential = Math.min(maxDelayMs, baseDelayMs * 2 ** attempt);
+    const backoff = rateLimited ? (retryAfterMs(error) ?? exponential) : exponential;
     const jitter = backoff * 0.3 * Math.random();
     await wait(backoff + jitter);
 

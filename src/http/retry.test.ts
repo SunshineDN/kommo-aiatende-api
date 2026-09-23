@@ -11,11 +11,11 @@ function networkError(config: any): AxiosError {
   return err;
 }
 
-function httpError(config: any, status: number): AxiosError {
+function httpError(config: any, status: number, headers: Record<string, string> = {}): AxiosError {
   const err = new Error('Bad Request') as AxiosError;
   err.isAxiosError = true;
   err.config = config;
-  err.response = { data: {}, status, statusText: 'Bad Request', headers: {}, config } as any;
+  err.response = { data: {}, status, statusText: 'Bad Request', headers, config } as any;
   err.toJSON = () => ({});
   return err;
 }
@@ -106,5 +106,66 @@ describe('attachRetryInterceptor', () => {
 
     await expect(client.get('/leads')).rejects.toBeTruthy();
     expect(calls).toBe(1);
+  });
+
+  it('faz retry em 429 mesmo em POST não marcado como idempotente (requisição nunca chegou a processar)', async () => {
+    let calls = 0;
+    const client = axios.create();
+    client.defaults.adapter = async (config) => {
+      calls++;
+      if (calls < 2) throw httpError(config, 429);
+      return fakeResponse(config);
+    };
+    attachRetryInterceptor(client, { retries: 3, baseDelayMs: 1, maxDelayMs: 2 });
+
+    const res = await client.post('/leads', {});
+    expect(res.data).toEqual({ ok: true });
+    expect(calls).toBe(2);
+  });
+
+  it('honra o header Retry-After (segundos) em vez do backoff exponencial', async () => {
+    let calls = 0;
+    const start = Date.now();
+    const client = axios.create();
+    client.defaults.adapter = async (config) => {
+      calls++;
+      if (calls < 2) throw httpError(config, 429, { 'retry-after': '0.05' });
+      return fakeResponse(config);
+    };
+    // baseDelayMs bem maior que o Retry-After, pra provar que é o header que manda, não o backoff.
+    attachRetryInterceptor(client, { retries: 3, baseDelayMs: 5000, maxDelayMs: 10000 });
+
+    const res = await client.get('/leads');
+    expect(res.data).toEqual({ ok: true });
+    expect(calls).toBe(2);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it('cai no backoff exponencial em 429 sem Retry-After', async () => {
+    let calls = 0;
+    const client = axios.create();
+    client.defaults.adapter = async (config) => {
+      calls++;
+      if (calls < 2) throw httpError(config, 429);
+      return fakeResponse(config);
+    };
+    attachRetryInterceptor(client, { retries: 3, baseDelayMs: 1, maxDelayMs: 2 });
+
+    const res = await client.get('/leads');
+    expect(res.data).toEqual({ ok: true });
+    expect(calls).toBe(2);
+  });
+
+  it('desiste de 429 depois do número configurado de retries', async () => {
+    let calls = 0;
+    const client = axios.create();
+    client.defaults.adapter = async (config) => {
+      calls++;
+      throw httpError(config, 429);
+    };
+    attachRetryInterceptor(client, { retries: 2, baseDelayMs: 1, maxDelayMs: 2 });
+
+    await expect(client.get('/leads')).rejects.toMatchObject({ response: { status: 429 } });
+    expect(calls).toBe(3);
   });
 });
