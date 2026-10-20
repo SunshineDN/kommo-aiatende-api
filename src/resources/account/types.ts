@@ -18,6 +18,14 @@ export interface AmojoRights {
   can_create_groups?: Record<string, unknown>;
 }
 
+export interface TaskType {
+  id: number;
+  name: string;
+  color?: string | null;
+  icon_id?: number | null;
+  code?: string | null;
+}
+
 export interface Account {
   id: number;
   name: string;
@@ -44,7 +52,7 @@ export interface Account {
   _embedded?: {
     amojo_rights?: AmojoRights;
     users_groups?: unknown;
-    task_types?: unknown;
+    task_types?: TaskType[];
     entity_names?: unknown;
     datetime_settings?: unknown;
     drive_url?: unknown;

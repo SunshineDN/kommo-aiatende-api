@@ -72,4 +72,8 @@ export class TasksResource extends BaseResource {
     const response = await this.client.patch<UpdateTasksResponse>(`/api/v4/tasks/${id}`, payload);
     return response.data;
   }
+
+  async delete(id: number): Promise<void> {
+    await this.client.delete(`/api/v4/tasks/${id}`);
+  }
 }
